@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto-Playing Audio Website</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        .welcome-box {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            margin: 40px 0;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes glow {
+            from {
+                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            }
+            to {
+                text-shadow: 2px 2px 20px rgba(255, 255, 255, 0.5);
+            }
+        }
+        
+        .audio-info {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 30px 0;
+        }
+        
+        .status {
+            font-weight: bold;
+            margin: 15px 0;
+            padding: 12px 24px;
+            border-radius: 25px;
+            display: inline-block;
+            font-size: 1.1rem;
+        }
+        
+        .status.playing {
+            background: rgba(46, 204, 113, 0.3);
+            color: #2ecc71;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        
+        .status.loading {
+            background: rgba(52, 152, 219, 0.3);
+            color: #3498db;
+        }
+        
+        .status.error {
+            background: rgba(231, 76, 60, 0.3);
+            color: #e74c3c;
+        }
+        
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.05);
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+        
+        .track-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 15px 0;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+        
+        .track-info span {
+            font-weight: bold;
+            color: #fff;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff6b6b, #ff8e53);
+            width: 0%;
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+        
+        .volume-display {
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+        
+        .instructions {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .note {
+            background: rgba(241, 196, 15, 0.2);
+            border-left: 4px solid #f1c40f;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .track-info {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="welcome-box">
+            <h1>🎵 Audio Playing Continuously 🎵</h1>
+            <p>Your audio will start automatically and loop while this page is open</p>
+            
+            <div class="audio-info">
+                <div class="status" id="audioStatus">Loading...</div>
+                
+                <div class="track-info">
+                    <span>🎵 Track:</span>
+                    <span id="currentTrack">My Welcome Sound</span>
+                </div>
+                
+                <div class="track-info">
+                    <span>⏱️ Duration:</span>
+                    <span id="duration">--:--</span>
+                </div>
+                
+                <div class="track-info">
+                    <span>🕐 Current Time:</span>
+                    <span id="currentTime">00:00</span>
+                </div>
+                
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                
+                <div class="volume-display">
+                    <span>🔊 Volume: <span id="volumeValue">70%</span></span>
+                </div>
+            </div>
+            
+            <div class="note">
+                <strong>🔊 Note:</strong> If you don't hear audio immediately, click anywhere on the page. Some browsers require user interaction before allowing audio to play.
+            </div>
+            
+            <div class="instructions">
+                <h3>📁 To Use Your Own Audio:</h3>
+                <p><strong>1.</strong> Place your audio file (.mp3, .wav, .ogg) in the same folder as this HTML file</p>
+                <p><strong>2.</strong> Replace "mour.mp3.mpeg" in the code with your filename</p>
+                <p><strong>3.</strong> Refresh the page</p>
+                <p><strong>4.</strong> Your audio will automatically play and loop continuously!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audio element with loop enabled -->
+    <audio id="mainAudio" preload="auto" loop>
+        <source src="mour.mp3.mpeg" type="audio/mpeg">
+        <source src="mour.mp3.mpeg" type="audio/wav">
+        Your browser does not support the audio element.
+    </audio>
+
+    <script>
+        // Audio management
+        const audioElement = document.getElementById('mainAudio');
+        const statusElement = document.getElementById('audioStatus');
+        const currentTrackElement = document.getElementById('currentTrack');
+        const durationElement = document.getElementById('duration');
+        const currentTimeElement = document.getElementById('currentTime');
+        const progressFill = document.getElementById('progressFill');
+        const volumeValue = document.getElementById('volumeValue');
+        
+        // Audio configuration
+        const audioConfig = {
+            name: "My Welcome Sound",
+            src: "mour.mp3.mpeg",  // ← Replace with your audio file name
+            volume: 0.7 // Volume level (0.0 to 1.0)
+        };
+        
+        let hasUserInteracted = false;
+        
+        // Initialize audio
+        function initAudio() {
+            audioElement.volume = audioConfig.volume;
+            currentTrackElement.textContent = audioConfig.name;
+            
+            // Add event listeners
+            audioElement.addEventListener('loadedmetadata', updateDuration);
+            audioElement.addEventListener('timeupdate', updateProgress);
+            audioElement.addEventListener('play', () => updateStatus('playing'));
+            audioElement.addEventListener('pause', () => updateStatus('paused'));
+            audioElement.addEventListener('ended', restartAudio);
+            audioElement.addEventListener('error', audioError);
+            audioElement.addEventListener('canplay', attemptAutoplay);
+            
+            // Update volume display
+            updateVolumeDisplay();
+        }
+        
+        // Attempt to auto-play
+        function attemptAutoplay() {
+            if (hasUserInteracted) return;
+            
+            const playPromise = audioElement.play();
+            
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    console.log('Audio auto-play successful');
+                    updateStatus('playing');
+                    hasUserInteracted = true;
+                }).catch(error => {
+                    console.log('Auto-play prevented by browser:', error);
+                    updateStatus('loading');
+                    showInteractionMessage();
+                });
+            }
+        }
+        
+        // Show message if user interaction is needed
+        function showInteractionMessage() {
+            const message = document.createElement('div');
+            message.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: rgba(52, 152, 219, 0.95);
+                color: white;
+                padding: 20px 30px;
+                border-radius: 15px;
+                box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+                z-index: 1000;
+                font-weight: bold;
+                text-align: center;
+                font-size: 18px;
+                backdrop-filter: blur(10px);
+                animation: fadeIn 0.5s ease;
+            `;
+            message.innerHTML = '🎵 Click anywhere to start the music! 🎵';
+            document.body.appendChild(message);
+            
+            // Add fade in animation
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes fadeIn {
+                    from { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+                    to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+                }
+            `;
+            document.head.appendChild(style);
+            
+            // Remove message after user interaction
+            const removeMessage = () => {
+                if (message.parentNode) {
+                    message.style.animation = 'fadeIn 0.3s ease reverse';
+                    setTimeout(() => {
+                        if (message.parentNode) {
+                            message.parentNode.removeChild(message);
+                        }
+                    }, 300);
+                }
+            };
+            
+            // Listen for any user interaction
+            document.addEventListener('click', removeMessage, { once: true });
+            document.addEventListener('keydown', removeMessage, { once: true });
+            document.addEventListener('touchstart', removeMessage, { once: true });
+        }
+        
+        // Start playing audio
+        function startAudio() {
+            audioElement.play().then(() => {
+                updateStatus('playing');
+                hasUserInteracted = true;
+            }).catch(error => {
+                console.error('Play failed:', error);
+                updateStatus('error');
+            });
+        }
+        
+        // Restart audio when it ends (backup for loop attribute)
+        function restartAudio() {
+            audioElement.currentTime = 0;
+            audioElement.play();
+        }
+        
+        // Update functions
+        function updateStatus(status) {
+            statusElement.className = `status ${status}`;
+            const statusText = {
+                'playing': '🟢 Playing',
+                'paused': '🟡 Paused', 
+                'loading': '🔄 Loading...',
+                'error': '❌ Error - Check audio file'
+            };
+            statusElement.textContent = statusText[status] || status;
+        }
+        
+        function updateVolumeDisplay() {
+            const volume = Math.round(audioElement.volume * 100);
+            volumeValue.textContent = `${volume}%`;
+        }
+        
+        function updateDuration() {
+            const duration = audioElement.duration;
+            if (!isNaN(duration)) {
+                durationElement.textContent = formatTime(duration);
+            }
+        }
+        
+        function updateProgress() {
+            const currentTime = audioElement.currentTime;
+            const duration = audioElement.duration;
+            
+            // Update current time display
+            currentTimeElement.textContent = formatTime(currentTime);
+            
+            // Update progress bar
+            if (duration > 0) {
+                const progress = (currentTime / duration) * 100;
+                progressFill.style.width = `${progress}%`;
+            }
+        }
+        
+        function formatTime(seconds) {
+            if (isNaN(seconds)) return '00:00';
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+        
+        function audioError() {
+            console.error('Audio error occurred - check if the audio file exists');
+            updateStatus('error');
+        }
+        
+        // Keep audio playing even if page loses focus
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden && audioElement.paused && hasUserInteracted) {
+                audioElement.play().catch(error => {
+                    console.log('Could not resume audio:', error);
+                });
+            }
+        });
+        
+        // Initialize when page loads
+        window.addEventListener('load', () => {
+            initAudio();
+            setTimeout(attemptAutoplay, 500);
+        });
+        
+        // Start audio on any user interaction
+        const startOnInteraction = (event) => {
+            if (!hasUserInteracted && audioElement.paused) {
+                startAudio();
+            }
+        };
+        
+        // Listen for various user interactions
+        document.addEventListener('click', startOnInteraction, { once: true });
+        document.addEventListener('keydown', startOnInteraction, { once: true });
+        document.addEventListener('touchstart', startOnInteraction, { once: true });
+        document.addEventListener('mousemove', startOnInteraction, { once: true });
+        
+        // Prevent audio from stopping when page is not in focus
+        window.addEventListener('beforeunload', () => {
+            audioElement.pause();
+        });
+    </script>
+</body>
+</html>
